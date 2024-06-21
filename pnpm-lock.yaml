@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      jsdom:
+        specifier: ^24.1.0
+        version: 24.1.0
     devDependencies:
       '@babel/core':
         specifier: 7.24.7
@@ -128,9 +132,6 @@ importers:
       husky:
         specifier: 9.0.11
         version: 9.0.11
-      jsdom:
-        specifier: 24.1.0
-        version: 24.1.0
       lint-staged:
         specifier: 15.2.5
         version: 15.2.5

@@ -61,7 +61,7 @@ export const parseDirectoryListingHtml = (
 
 export interface FetchDirectoryListingArgs {
   concurrency?: number;
-  fetchFn?: (url: string) => Promise<Response>;
+  fetchListingFn?: (url: string) => Promise<Response>;
 
   url: string;
 }
@@ -70,14 +70,24 @@ export const fetchDirectoryListing = async (
   args: FetchDirectoryListingArgs,
   path: string = ''
 ): Promise<DirectoryListingItem[]> => {
-  const { fetchFn, url } = args;
+  const { fetchListingFn, url } = args;
   const baseUrl = new URL(url).origin;
   const currentPath = path || new URL(url).pathname;
-  const response = fetchFn
-    ? await fetchFn([baseUrl, currentPath].join('/'))
+  const response = fetchListingFn
+    ? await fetchListingFn([baseUrl, currentPath].join('/'))
     : await fetch([baseUrl, currentPath].join('/'));
   const html = await response.text();
-  const items = parseDirectoryListingHtml({ html });
+  let items = parseDirectoryListingHtml({ html });
+
+  items = items.map((item) => {
+    if (item.type === 'file') {
+      return {
+        ...item,
+        path: [item.path].join('/').replace(/([^:]\/)\/+/g, '$1'),
+      };
+    }
+    return item;
+  });
 
   await Promise.all(
     items
@@ -86,7 +96,7 @@ export const fetchDirectoryListing = async (
         const newPath = [currentPath, item.path].join('/');
         const subDirectoryItems = await fetchDirectoryListing(
           {
-            fetchFn,
+            fetchListingFn,
             url: [baseUrl, newPath].join('/'),
           },
           newPath
@@ -142,10 +152,34 @@ export const parseFileSize = (size: string): number => {
 };
 
 export interface ScrapeDirectoryListingArgs {
-  concurrency?: number;
-  fetchFn?: () => Promise<Response>;
-
-  snapshotFn?: () => Promise<void>;
+  fetchFileFn?: (item: DirectoryListingItem) => Promise<Response>;
+  fetchListingFn?: (url: string) => Promise<Response>;
 
   url: string;
 }
+
+export const scrapeDirectoryListing = async (
+  args: ScrapeDirectoryListingArgs
+): Promise<
+  {
+    data: string;
+    item: DirectoryListingItem;
+  }[]
+> => {
+  const items = (await fetchDirectoryListing(args)).filter(
+    (x) => x.type === 'file'
+  );
+
+  return Promise.all(
+    items.map(async (item) => {
+      const response = args.fetchFileFn
+        ? await args.fetchFileFn(item)
+        : await fetch(item.path);
+
+      return {
+        item,
+        data: await response.text(),
+      };
+    })
+  );
+};

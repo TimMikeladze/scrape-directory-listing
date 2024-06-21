@@ -1,7 +1,7 @@
 {
   "name": "scrape-directory-listing",
   "description": "Download all the files from a directory listing.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
   "license": "MIT",
   "keywords": [

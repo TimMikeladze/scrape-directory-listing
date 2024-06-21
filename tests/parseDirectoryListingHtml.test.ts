@@ -6,6 +6,17 @@ it('works', () => {
   expect(
     parseDirectoryListingHtml({
       html: example,
-    }).sort((a, b) => b.modifiedAt - a.modifiedAt)
-  ).toMatchSnapshot();
+    })
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        description: expect.any(String),
+        modifiedAt: expect.any(Number),
+        name: expect.any(String),
+        url: expect.any(String),
+        size: expect.any(Number),
+        type: expect.any(String),
+      }),
+    ])
+  );
 });

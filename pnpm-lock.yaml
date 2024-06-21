@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      human-format:
-        specifier: ^1.2.0
-        version: 1.2.0
     devDependencies:
       '@babel/core':
         specifier: 7.24.7
@@ -3936,10 +3932,6 @@ packages:
   https-proxy-agent@7.0.4:
     resolution: {integrity: sha512-wlwpilI7YdjSkWaQ/7omYBMTliDcmCN8OLihO6I9B86g06lMyAoqgoDpV0XqoaPOKj+0DIdAvnsWfyAAhmimcg==}
     engines: {node: '>= 14'}
-
-  human-format@1.2.0:
-    resolution: {integrity: sha512-GIjOefWusTiXEPezbuI59uc1G2SNMpym6w1wNfoWAG6QrTsWueuauR5We0xHHuzoJKIYTwwNtTEy0ahyji5KXw==}
-    engines: {node: '>=4'}
 
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -11276,8 +11268,6 @@ snapshots:
       debug: 4.3.5
     transitivePeerDependencies:
       - supports-color
-
-  human-format@1.2.0: {}
 
   human-signals@2.1.0: {}
 

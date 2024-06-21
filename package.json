@@ -1,13 +1,19 @@
 {
   "name": "scrape-directory-listing",
-  "description": "",
+  "description": "Download all the files from a directory listing.",
   "version": "0.0.0",
   "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "scrape directory listing",
+    "download directory",
+    "download file directory",
+    "scrape file directory",
+    "scrape directory"
+  ],
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git@github.com:TimMikeladze/scrape-directory-listing.git"
   },
   "scripts": {
     "dev": "concurrently \"pnpm build --watch\" \"pnpm test\" ",

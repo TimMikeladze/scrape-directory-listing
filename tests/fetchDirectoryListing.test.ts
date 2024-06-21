@@ -14,7 +14,7 @@ it(
           description: expect.any(String),
           modifiedAt: expect.any(Number),
           name: expect.any(String),
-          path: expect.any(String),
+          url: expect.any(String),
           size: expect.any(Number),
           type: expect.any(String),
         }),
@@ -31,7 +31,7 @@ it(
           description: expect.any(String),
           modifiedAt: expect.any(Number),
           name: expect.any(String),
-          path: expect.any(String),
+          url: expect.any(String),
           type: expect.any(String),
         }),
       ])

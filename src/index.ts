@@ -1,12 +1,12 @@
 import { JSDOM } from 'jsdom';
 
-interface DirectoryListingItem {
+export interface DirectoryListingItem {
   description: string;
   modifiedAt: number;
   name: string;
-  path: string;
   size: number | null;
   type: 'file' | 'directory';
+  url: string;
 }
 
 export interface ParseDirectoryListingHtmlArgs {
@@ -49,7 +49,7 @@ export const parseDirectoryListingHtml = (
     files.push({
       type,
       name,
-      path,
+      url: path,
       modifiedAt,
       size: parsedSize,
       description,
@@ -83,7 +83,7 @@ export const fetchDirectoryListing = async (
     if (item.type === 'file') {
       return {
         ...item,
-        path: [item.path].join('/').replace(/([^:]\/)\/+/g, '$1'),
+        url: [item.url].join('/').replace(/([^:]\/)\/+/g, '$1'),
       };
     }
     return item;
@@ -93,7 +93,7 @@ export const fetchDirectoryListing = async (
     items
       .filter((item) => item.type === 'directory')
       .map(async (item) => {
-        const newPath = [currentPath, item.path].join('/');
+        const newPath = [currentPath, item.url].join('/');
         const subDirectoryItems = await fetchDirectoryListing(
           {
             fetchListingFn,
@@ -104,7 +104,7 @@ export const fetchDirectoryListing = async (
         items.push(
           ...subDirectoryItems.map((x) => ({
             ...x,
-            path: [baseUrl, newPath, x.path]
+            url: [baseUrl, newPath, x.url]
               .join('/')
               .replace(/([^:]\/)\/+/g, '$1'),
           }))
@@ -162,7 +162,8 @@ export const scrapeDirectoryListing = async (
   args: ScrapeDirectoryListingArgs
 ): Promise<
   {
-    data: string;
+    data: ArrayBuffer;
+    headers: Headers;
     item: DirectoryListingItem;
   }[]
 > => {
@@ -174,11 +175,12 @@ export const scrapeDirectoryListing = async (
     items.map(async (item) => {
       const response = args.fetchFileFn
         ? await args.fetchFileFn(item)
-        : await fetch(item.path);
+        : await fetch(item.url);
 
       return {
         item,
-        data: await response.text(),
+        data: await response.arrayBuffer(),
+        headers: response.headers,
       };
     })
   );

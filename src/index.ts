@@ -5,7 +5,7 @@ interface DirectoryListingItem {
   modifiedAt: number;
   name: string;
   path: string;
-  size: string | null;
+  size: number | null;
   type: 'file' | 'directory';
 }
 
@@ -43,6 +43,7 @@ export const parseDirectoryListingHtml = (
     const modifiedAt = new Date(modifiedAtText).getTime();
     const sizeText = cells[3].textContent?.trim() || '';
     const size = sizeText === '-' ? null : sizeText;
+    const parsedSize = size ? parseFileSize(size) : null;
     const description = cells[4].textContent?.trim() || '';
 
     files.push({
@@ -50,7 +51,7 @@ export const parseDirectoryListingHtml = (
       name,
       path,
       modifiedAt,
-      size,
+      size: parsedSize,
       description,
     });
   });
@@ -59,7 +60,9 @@ export const parseDirectoryListingHtml = (
 };
 
 export interface FetchDirectoryListingArgs {
+  concurrency?: number;
   fetchFn?: (url: string) => Promise<Response>;
+
   url: string;
 }
 
@@ -88,14 +91,60 @@ export const fetchDirectoryListing = async (
           },
           newPath
         );
-        items.push(...subDirectoryItems);
+        items.push(
+          ...subDirectoryItems.map((x) => ({
+            ...x,
+            path: [baseUrl, newPath, x.path]
+              .join('/')
+              .replace(/([^:]\/)\/+/g, '$1'),
+          }))
+        );
       })
   );
 
   return items;
 };
+
+export const parseFileSize = (size: string): number => {
+  // Regular expression to match the size with optional units
+  const regex = /^(\d+(\.\d+)?)\s*(B|K|KB|M|MB|G|GB|T|TB|P|PB)?$/i;
+  const match = size.match(regex);
+
+  if (!match) {
+    throw new Error(`Invalid file size format: ${size}`);
+  }
+
+  const value = parseFloat(match[1]);
+  const unit = match[3] ? match[3].toUpperCase() : 'B'; // Default to 'B' if no unit is specified
+
+  // Define unit multipliers
+  const units: { [key: string]: number } = {
+    B: 1,
+    K: 1024,
+    KB: 1024,
+    M: 1024 * 1024,
+    MB: 1024 * 1024,
+    G: 1024 * 1024 * 1024,
+    GB: 1024 * 1024 * 1024,
+    T: 1024 * 1024 * 1024 * 1024,
+    TB: 1024 * 1024 * 1024 * 1024,
+    P: 1024 * 1024 * 1024 * 1024 * 1024,
+    PB: 1024 * 1024 * 1024 * 1024 * 1024,
+  };
+
+  if (!units[unit]) {
+    throw new Error(`Unknown unit: ${unit}`);
+  }
+
+  // Convert to bytes and round to the nearest integer
+  const bytes = value * units[unit];
+  return Math.round(bytes);
+};
+
 export interface ScrapeDirectoryListingArgs {
+  concurrency?: number;
   fetchFn?: () => Promise<Response>;
+
   snapshotFn?: () => Promise<void>;
 
   url: string;

@@ -59,14 +59,44 @@ export const parseDirectoryListingHtml = (
 };
 
 export interface FetchDirectoryListingArgs {
-  fetchFn?: () => Promise<Response>;
+  fetchFn?: (url: string) => Promise<Response>;
   url: string;
 }
 
 export const fetchDirectoryListing = async (
-  args: FetchDirectoryListingArgs
+  args: FetchDirectoryListingArgs,
+  path: string = ''
 ): Promise<DirectoryListingItem[]> => {
-  const response = args.fetchFn ? await args.fetchFn() : await fetch(args.url);
+  const { fetchFn, url } = args;
+  const baseUrl = new URL(url).origin;
+  const currentPath = path || new URL(url).pathname;
+  const response = fetchFn
+    ? await fetchFn([baseUrl, currentPath].join('/'))
+    : await fetch([baseUrl, currentPath].join('/'));
   const html = await response.text();
-  return parseDirectoryListingHtml({ html });
+  const items = parseDirectoryListingHtml({ html });
+
+  await Promise.all(
+    items
+      .filter((item) => item.type === 'directory')
+      .map(async (item) => {
+        const newPath = [currentPath, item.path].join('/');
+        const subDirectoryItems = await fetchDirectoryListing(
+          {
+            fetchFn,
+            url: [baseUrl, newPath].join('/'),
+          },
+          newPath
+        );
+        items.push(...subDirectoryItems);
+      })
+  );
+
+  return items;
 };
+export interface ScrapeDirectoryListingArgs {
+  fetchFn?: () => Promise<Response>;
+  snapshotFn?: () => Promise<void>;
+
+  url: string;
+}
